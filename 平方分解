@@ -1,0 +1,21 @@
+#include <unordered_set>
+#include <algorithm>
+class Solution {
+public:
+    int Mi=1e9,f=1;
+    
+    int numSquares(int n) {
+        static std::unordered_set<int> a;
+        if(f)
+        for(int i=1;i*i<=n;i++){
+            a.insert(i*i);
+            f=0;
+        }
+        if(a.count(n)) return 1;
+        for (const auto& num : a){
+            if (num > n) continue;
+            Mi= min(Mi,numSquares(n-num)+1);
+        }
+        return Mi;
+    }
+};
