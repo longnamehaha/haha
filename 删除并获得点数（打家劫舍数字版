@@ -1,0 +1,45 @@
+
+class Solution {
+public:
+    int deleteAndEarn(vector<int>& nums) {
+        if (nums.empty()) return 0;
+        sort(nums.begin(), nums.end());
+        
+        // 统计每个数字的总点数，并存入有序集合
+        unordered_map<int, int> sum;
+        set<int> sm;
+        for (int num : nums) {
+            sum[num] += num;
+            sm.insert(num);
+        }
+        
+        // 将set转换为排序后的vector方便索引
+        vector<int> sorted(sm.begin(), sm.end());
+        int m = sorted.size();
+        if (m == 0) return 0;
+        
+        // 动态规划数组
+        vector<int> f(m, 0);
+        f[0] = sum[sorted[0]]; // 初始化第一个元素
+        
+        // 处理第二个元素（i=1）
+        if (m >= 2) {
+            if (sorted[1] - sorted[0] == 1) {
+                f[1] = max(sum[sorted[1]], f[0]);
+            } else {
+                f[1] = f[0] + sum[sorted[1]];
+            }
+        }
+        
+        // 从i=2开始处理后续元素
+        for (int i = 2; i < m; ++i) {
+            if (sorted[i] - sorted[i-1] == 1) {
+                f[i] = max(f[i-1], f[i-2] + sum[sorted[i]]);
+            } else {
+                f[i] = f[i-1] + sum[sorted[i]];
+            }
+        }
+        
+        return f.empty() ? 0 : f.back();
+    }
+};
