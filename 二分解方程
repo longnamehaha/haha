@@ -1,0 +1,154 @@
+#include <iostream>
+#include <functional>
+using namespace std;
+
+template<typename Func>
+int find_min_int_x(int n, Func f) {
+    // 处理解在左侧（x <= 0）的情况
+    if (f(0.0) >= n) {
+        int left = -1;
+        int right = 0;
+        // 向左扩展找到 f(left) < n 的区间
+        while (f(left) >= n) {
+            right = left;
+            left *= 2;
+        }
+        // 此时区间为 [left, right]，f(left) < n，f(right) >= n
+        // 二分查找最小的 x（最负的整数）
+        int result = right;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (f(mid) >= n) {
+                result = mid;
+                right = mid - 1; // 继续向左找更小的 x
+            } else {
+                left = mid + 1;
+            }
+        }
+        return result;
+    } 
+    // 处理解在右侧（x >= 0）的情况
+    else {
+        int low = 0;
+        int high = 1;
+        // 向右扩展找到 f(high) >= n 的区间
+        while (f(high) < n) {
+            low = high;
+            high *= 2;
+        }
+        // 此时区间为 [low+1, high]，f(high) >= n
+        // 二分查找最小的 x（最小的正整数）
+        int result = high;
+        while (low <= high) {
+            int mid = low + (high - low) / 2;
+            if (f(mid) >= n) {
+                result = mid;
+                high = mid - 1; // 继续向左找更小的 x
+            } else {
+                low = mid + 1;
+            }
+        }
+        return result;
+    }
+}
+
+
+double example_func(double x) {
+    return x * (x+3)/2;
+}
+
+int main() {
+    
+    int n1 ;
+    cin>>n1;
+    int result = find_min_int_x(n1, example_func);
+    cout << result;
+
+    return 0;
+}
+
+
+ll版本
+#include <iostream>
+#include <functional>
+#include <climits>  // 包含 LLONG_MAX 定义
+
+template<typename Func>
+long long find_min_int_x(long long n, Func f) {
+    long long left, right;
+
+    // 处理解在左侧的情况（f(0) >= n）
+    if (f(0) >= n) {
+        left = -1;
+        right = 0;
+        // 向左扩展找到 f(left) < n 的区间
+        while (f(left) >= n) {
+            // 防止溢出：如果 left 已经是最小值，直接终止循环
+            if (left < LLONG_MIN / 2) {
+                left = LLONG_MIN;
+                break;
+            }
+            right = left;
+            left *= 2;
+        }
+    }
+    // 处理解在右侧的情况（f(0) < n）
+    else {
+        left = 0;
+        right = 1;
+        // 向右扩展找到 f(right) >= n 的区间
+        while (f(right) < n) {
+            // 防止溢出：如果 right 已经是最大值，直接终止循环
+            if (right > LLONG_MAX / 2) {
+                right = LLONG_MAX;
+                break;
+            }
+            left = right;
+            right *= 2;
+        }
+    }
+
+    // 二分法缩小区间，寻找最小的满足条件的整数 x
+    long long result = LLONG_MAX; // 初始化为一个不可能的值
+    while (left <= right) {
+        long long mid = left + (right - left) / 2; // 防止溢出
+        if (f(mid) >= n) {
+            result = mid;       // 记录可能的解
+            right = mid - 1;    // 尝试更小的 x
+        } else {
+            left = mid + 1;     // 需要更大的 x
+        }
+    }
+
+    return result;
+}
+
+// 示例函数：f(x) = x^2（需处理大整数溢出）
+long long example_func(long long x) {
+    if (x >= 3037000500 || x <= -3037000500) {
+        // x^2 超过 LLONG_MAX 时返回 LLONG_MAX 避免溢出
+        return LLONG_MAX;
+    }
+    return x * (x+3)/2;
+}
+/*
+// 测试左侧解的函数：f(x) = x^3
+long long cube_func(long long x) {
+    return x * x * x;
+}
+*/
+int main() {
+    // 测试右侧解（x >= 0）
+    long long n1 ; // 10^12
+    std::cin>> n1;
+    long long result1 = find_min_int_x(n1, example_func);
+    std::cout << result1 << std::endl;
+
+/*    // 测试左侧解（x <= 0）
+    long long n2 = -1000000000000LL; // -10^12
+    long long result2 = find_min_int_x(n2, cube_func);
+    std::cout << "Minimal integer x (left) satisfying f(x) >= " << n2 
+              << " is: " << result2 << std::endl;
+*/
+    return 0;
+}
